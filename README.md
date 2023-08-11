@@ -12,4 +12,5 @@
 ## TODO Future:
 - Chatbox
 - Cursor / Background Customization
+- Randomly generated room designs (from a pool of options)
 - ??? Who knows.
