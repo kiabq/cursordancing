@@ -3,30 +3,23 @@ import * as Cors from '@koa/cors';
 import { Server } from 'socket.io';
 
 const app = new Koa();
-app.use(Cors(
-    
-));
+app.use(Cors());
 
-const io = new Server(3000, {
+const io = new Server(5173, {
     cors: {
-        origin: "http://localhost:3001",
+        origin: "*",
         methods: ["GET", "POST"]
     }
 })
 
 io.on("connection", (socket) => {
-  // send a message to the client
-  socket.emit("hello from server", 1, "2", { 3: Buffer.from([4]) });
+  socket.join("room");
 
-  // receive a message from the client
-  socket.on("hello from client", (...args) => {
-    console.log("goodbye")
-    // ...
-  });
+  socket.on("player_move", (...args) => {
+    io.to("room").emit("other_move", ...args, socket.id);
+  })
+
+  socket.on("disconnect", (reason) => {
+    console.log(`${socket.id} Disconnected: ${reason}`);
+  })
 });
-
-app.use(async (ctx: any, next: any ) => {
-  ctx.body = 'Hello World';
-});
-
-app.listen(5173);

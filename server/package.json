@@ -8,5 +8,8 @@
     "@types/koa": "^2.13.8",
     "@types/koa__cors": "^4.0.0",
     "@types/node": "^20.4.9"
+  },
+  "scripts": {
+    "start": "nodemon server.ts"
   }
 }
