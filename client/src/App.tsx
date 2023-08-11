@@ -9,10 +9,7 @@ import type { Socket } from 'socket.io-client';
 import './App.css';
 
 type DefaultEventsMap = any;
-type Players = {
-  x: number,
-  y: number
-}
+type Players = any;
 
 function Game({ socket }: { socket: Socket<DefaultEventsMap, DefaultEventsMap> }) {
   const [players, setPlayers] = useState<Players | null>(null);
@@ -28,6 +25,12 @@ function Game({ socket }: { socket: Socket<DefaultEventsMap, DefaultEventsMap> }
 
     socket.emit("player_move", pos);
   }
+
+  useEffect(() => {
+    socket.connect();
+
+    return () => { socket.disconnect() }
+  }, [socket])
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,15 +50,23 @@ function Game({ socket }: { socket: Socket<DefaultEventsMap, DefaultEventsMap> }
         ctx!.stroke();
         ctx!.fill();
       }
-      
+
       if (players) {
-        ctx!.fillStyle = "red";
-        ctx!.fillRect(
-          window.innerWidth * players?.x, 
-          window.innerHeight * players?.y,
-          20,
-          20
-        )
+        {
+          Object.keys(players).forEach((key) => {
+            if (socket.id !== key && players[key].position) {
+              let color = `rgb(${Math.random() * 255, Math.random() * 255, Math.random() * 255})`;
+
+              ctx!.fillStyle = color;
+              ctx!.fillRect(
+                window.innerWidth * players[key]?.position.x | 0,
+                window.innerHeight * players[key]?.position.y | 0,
+                20,
+                20
+              )
+            }
+          })
+        }
       }
     }
 
@@ -63,7 +74,6 @@ function Game({ socket }: { socket: Socket<DefaultEventsMap, DefaultEventsMap> }
       {
         x: players ? window.innerWidth * players?.x : null, 
         y: players ? window.innerHeight * players?.y : null,
-        
       }
     )
   }, [players])
@@ -73,15 +83,24 @@ function Game({ socket }: { socket: Socket<DefaultEventsMap, DefaultEventsMap> }
   })
 
   socket.on("other_move", (...args: any) => {
-    const movingSocket = args[1];
-
-    if (movingSocket !== socket.id) {
-      setPlayers(args[0]);
-    }
+    setPlayers(args[2]);
   })
 
   return (
     <>
+      {players && Object.keys(players).map((key) => {
+        if (players[key].position !== null) {
+          return (
+            <span style={{
+              "position": "absolute",
+              "top": `${window.innerHeight* players[key].position.y}px`,
+              "marginLeft": `${window.innerWidth * players[key].position.x}px`
+            }}>
+              {key}
+            </span>
+          )
+        }
+      })}
       <canvas
         className="App"
         height={window.innerHeight}
