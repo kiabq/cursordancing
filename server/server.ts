@@ -1,11 +1,25 @@
+//? Libraries
 import * as Koa from 'koa';
 import * as Cors from '@koa/cors';
 import { Server } from 'socket.io';
 
+//? Types
+import { 
+  ClientToServerEvents, 
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData 
+} from "./utils/types";
+
 const app = new Koa();
 app.use(Cors());
 
-const io = new Server(5173, {
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData  
+>(5173, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
@@ -19,15 +33,31 @@ type ClientPosition = {
 
 type ClientSocket = string | null;
 
+interface IRoom {
+  [key: string]: any
+};
+
 interface IClient {
   [key: string]: {
     socket: ClientSocket,
     position: ClientPosition
   },
-}
+};
+
+class Rooms {
+  rooms: IRoom;
+
+  constructor() {
+    this.rooms = {};
+  }
+
+  public connectRoom() {}
+
+  public disconnectRoom() {}
+};
 
 class Clients {
-  clients: Partial<IClient>
+  clients: IClient;
 
   constructor() {
     this.clients = {};
@@ -42,20 +72,43 @@ class Clients {
   public removeClients(socket: string) {
     delete this.clients[socket];
   }
-}
+};
 
 const session = new Clients();
+const { rooms } = new Rooms();
+
+// TODO: Add ability to create named rooms
+// TODO: Allow users to create / update their username
+  // - This means associating a username with a particular socket,
+  // so add this sometime after the handshake and remove it when the socket is disconnected
+// TODO: Allow users to select room
+// TODO: Allow users to chat
 
 io.on("connection", (socket) => {
-  socket.join("room");
   session.saveClients(socket.id, null);
 
   io.to("room").emit("clients", session.clients);
 
-  socket.on("player_move", (...args) => {
-    session.clients[socket.id]!.position = {x: args[0].x, y: args[0].y }
+  socket.on("connect_to", (...args) => {
+    const room = args[0];
+    if (room && rooms[room]) {
+      socket.join(room);
+    } else {
+      io.emit("room_error", "Room Does not exist");
+    }
+  })
 
-    io.to("room").emit("other_move", ...args, socket.id, session.clients);
+  socket.on("player_move", (...args) => {
+    if (args) {
+      const moveX = args[0].x;
+      const moveY = args[0].y;
+
+      session.clients[socket.id]!.position = {x: moveX, y: moveY }
+
+      io
+        .to("room")
+        .emit("other_move", ...args, socket.id, session.clients);
+    }
   })
 
   socket.on("disconnect", (reason) => {
