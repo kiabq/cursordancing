@@ -9,7 +9,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-    connect_to: (room: string | undefined) => void;
+    connect_to: (room: string | undefined, callback: (response: any) => void) => void;
     player_move: ({ x, y }: UserPos) => void;
 }
 
