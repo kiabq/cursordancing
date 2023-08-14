@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 // Libraries
 import { useParams } from 'react-router-dom';
 import { useSocket } from '../contexts/socket';
+import { useNavigate } from 'react-router-dom';
 
 type Players = any;
 
@@ -13,9 +14,11 @@ interface IRoom {
 
 export default function Room({ room }: IRoom) {
     const [players, setPlayers] = useState<Players | null>(null);
+    const [loaded, setLoaded] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const params = useParams();
     const socket = useSocket();
+    const navigate = useNavigate();
 
     // TODO: Add unmounting functions for sockets
     // TODO: Separate this into components & lib functions
@@ -28,12 +31,20 @@ export default function Room({ room }: IRoom) {
   
       socket?.emit("player_move", pos);
     }
-    
+
     useEffect(() => {
-      socket?.emit("connect_to", params[room]);
+      socket?.emit("connect_to", params[room], (response) => {                                                                           
+        if (response.status === "fail") {
+          navigate("/invalid-room");
+        } else {
+          setLoaded(true);
+        }
+      });
       socket?.connect();
 
-      return () => { socket?.disconnect() }
+      return () => { 
+        socket?.disconnect();
+      }
     }, [socket])
   
     useEffect(() => {
@@ -45,7 +56,7 @@ export default function Room({ room }: IRoom) {
   
         // TODO: Draw SVG image to canvas
   
-        ctx!.fillStyle = '#DFCCFB';
+        ctx!.fillStyle = "#DFCCFB";
         ctx!.fillRect(0, 0, canvasW, canvasH);
   
         if (players) {
@@ -65,10 +76,6 @@ export default function Room({ room }: IRoom) {
         }
       }
     }, [players])
-
-    socket?.on("room_error", (...args: any) => {
-        console.log(args[0])
-    })
 
     socket?.on("other_move", (...args: any) => {
       setPlayers(args[2]);
@@ -90,14 +97,17 @@ export default function Room({ room }: IRoom) {
             )
           }
         })}
-        <canvas
-          className="App"
-          height={window.innerHeight}
-          width={window.innerWidth}
-          onMouseMove={(e) => { EmitCursor(e) }}
-          ref={canvasRef}
-        >
-        </canvas>
+        {loaded && 
+          <canvas
+            className="App"
+            style={{"backgroundColor": "#DFCCFB"}}
+            height={window.innerHeight}
+            width={window.innerWidth}
+            onMouseMove={(e) => { EmitCursor(e) }}
+            ref={canvasRef}
+          >
+          </canvas>
+        }
       </>
     )
   }

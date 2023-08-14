@@ -8,11 +8,14 @@ import {
 
 //? Components
 import App from './App';
+import Home from './pages/Home';
 import CreateRoom from './pages/CreateRoom';
-import reportWebVitals from './reportWebVitals';
+import InvalidRoom from './pages/InvalidRoom';
 
 //? Styling
 import './index.css';
+
+import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -20,12 +23,20 @@ const root = ReactDOM.createRoot(
 
 const router = createBrowserRouter([
   {
+    path: "/",
+    element: <Home />
+  },
+  {
     path: "/room/:room",
     element: <App />
   },
   {
     path: '/create-room',
     element: <CreateRoom />
+  },
+  {
+    path: '/invalid-room',
+    element: <InvalidRoom />
   }
 ])
 

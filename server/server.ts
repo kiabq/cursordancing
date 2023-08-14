@@ -1,6 +1,8 @@
 //? Libraries
 import * as Koa from 'koa';
 import * as Cors from '@koa/cors';
+import Router = require('koa-router');
+import BodyParser = require('koa-bodyparser');
 import { Server } from 'socket.io';
 
 //? Types
@@ -13,6 +15,9 @@ import {
 
 const app = new Koa();
 app.use(Cors());
+app.use(BodyParser());
+
+const router = new Router();
 
 const io = new Server<
   ClientToServerEvents,
@@ -87,14 +92,16 @@ const { rooms } = new Rooms();
 io.on("connection", (socket) => {
   session.saveClients(socket.id, null);
 
-  io.to("room").emit("clients", session.clients);
+  // io.to("room").emit("clients", session.clients);
 
-  socket.on("connect_to", (...args) => {
-    const room = args[0];
+  socket.on("connect_to", (args, callback) => {
+    const room = args;
+
     if (room && rooms[room]) {
       socket.join(room);
+      callback({ status: "ok" });
     } else {
-      io.emit("room_error", "Room Does not exist");
+      callback({ status: "fail" });
     }
   })
 
@@ -107,7 +114,7 @@ io.on("connection", (socket) => {
 
       io
         .to("room")
-        .emit("other_move", ...args, socket.id, session.clients);
+        .emit("other_move");
     }
   })
 
@@ -118,3 +125,8 @@ io.on("connection", (socket) => {
 
   console.log("Clients: ", session.clients);
 });
+
+app
+  .use(router.routes())
+  .use(router.allowedMethods())
+  .listen('3001');

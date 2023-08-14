@@ -16,8 +16,8 @@ import './App.css';
 function App() {
   return (
     <SocketProvider>
-      <div style={{ "height": "100vh", "width": "100vw", "overflow": "hidden", "backgroundColor": "#DFCCFB" }}>
-        <Room />
+      <div style={{ "height": "100vh", "width": "100vw", "overflow": "hidden" }}>
+        <Room room="" />
       </div>
     </SocketProvider>
   );
