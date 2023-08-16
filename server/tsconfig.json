@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-      "lib": ["es5", "es6"],
+      "lib": ["ES2022"],
       "module": "commonjs",
       "moduleResolution": "node",
-      "target": "es6",
+      "target": "ES2022",
       
       "strict": true,
       "skipLibCheck": true,
