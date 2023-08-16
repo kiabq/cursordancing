@@ -5,13 +5,26 @@ import Router = require('koa-router');
 import BodyParser = require('koa-bodyparser');
 import { Server } from 'socket.io';
 
+//? Routes
+import { createRoom, getRooms } from './src/routes/http';
+
+//? Services
+import { Rooms } from './src/services/rooms';
+
+//? Utils
+import roomhash from './utils/roomhash';
+
 //? Types
-import { 
-  ClientToServerEvents, 
+import {
+  ClientToServerEvents,
   ServerToClientEvents,
   InterServerEvents,
-  SocketData 
+  SocketData,
+
 } from "./utils/types";
+
+// TODO: Make folders for models/entities
+// TODO: Make folders for routes (WS and HTTP should be separate)
 
 const app = new Koa();
 app.use(Cors());
@@ -19,86 +32,39 @@ app.use(BodyParser());
 
 const router = new Router();
 
-const io = new Server<
+export const io = new Server<
   ClientToServerEvents,
   ServerToClientEvents,
   InterServerEvents,
-  SocketData  
+  SocketData
 >(5173, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
 });
 
-type ClientPosition = {
-  x: number,
-  y: number
-} | null;
-
-type ClientSocket = string | null;
-
-interface IRoom {
-  [key: string]: any
-};
-
-interface IClient {
-  [key: string]: {
-    socket: ClientSocket,
-    position: ClientPosition
-  },
-};
-
-class Rooms {
-  rooms: IRoom;
-
-  constructor() {
-    this.rooms = {};
-  }
-
-  public connectRoom() {}
-
-  public disconnectRoom() {}
-};
-
-class Clients {
-  clients: IClient;
-
-  constructor() {
-    this.clients = {};
-    this.saveClients = this.saveClients.bind(this);
-    this.removeClients = this.removeClients.bind(this);
-  }
-
-  public saveClients(socket: string, position: ClientPosition) {
-    this.clients[socket] = { socket: socket, position: position };
-  }
-
-  public removeClients(socket: string) {
-    delete this.clients[socket];
-  }
-};
-
-const session = new Clients();
-const { rooms } = new Rooms();
+export const RoomHandler = new Rooms();
 
 // TODO: Add ability to create named rooms
 // TODO: Allow users to create / update their username
-  // - This means associating a username with a particular socket,
-  // so add this sometime after the handshake and remove it when the socket is disconnected
+// - This means associating a username with a particular socket,
+// so add this sometime after the handshake and remove it when the socket is disconnected
 // TODO: Allow users to select room
 // TODO: Allow users to chat
 
+//! REFACTOR!!!
+//! REFACTOR!!!
+//! REFACTOR!!!
+//! REFACTOR!!!
 io.on("connection", (socket) => {
-  session.saveClients(socket.id, null);
-
-  // io.to("room").emit("clients", session.clients);
-
   socket.on("connect_to", (args, callback) => {
     const room = args;
 
-    if (room && rooms[room]) {
+    if (room && RoomHandler.rooms[room]) {
       socket.join(room);
+      //! Change this
+      RoomHandler.rooms[room].session.saveClients(socket.id, null, room);
       callback({ status: "ok" });
     } else {
       callback({ status: "fail" });
@@ -106,25 +72,41 @@ io.on("connection", (socket) => {
   })
 
   socket.on("player_move", (...args) => {
-    if (args) {
-      const moveX = args[0].x;
-      const moveY = args[0].y;
+    try {
+      if (args) {
+        const { position, room_id } = args[0];
+        const room = RoomHandler.rooms[room_id];
+        const { clients } = room.session;
 
-      session.clients[socket.id]!.position = {x: moveX, y: moveY }
+        clients[socket.id]!.position = {
+          x: position.x,
+          y: position.y
+        }
 
-      io
-        .to("room")
-        .emit("other_move");
+        io
+          .to(room_id)
+          .emit("other_move", room);
+      }
+    } catch (error) {
+      console.warn(error);
     }
   })
 
-  socket.on("disconnect", (reason) => {
-    session.removeClients(socket.id);
-    console.log(`${socket.id} Disconnected: ${reason}`);
-  })
+  socket.on("disconnect", () => {
+    const rooms = Object.entries(RoomHandler.rooms);
 
-  console.log("Clients: ", session.clients);
+    rooms.forEach((room) => {
+      const [ _, info ] = room;
+
+      if (info.session.clients[socket.id]) {
+        info.session.removeClients(socket.id);
+      }
+    })
+  })
 });
+
+router.get('/rooms', getRooms);
+router.post('/create-room', createRoom);
 
 app
   .use(router.routes())
