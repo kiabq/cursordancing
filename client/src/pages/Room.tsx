@@ -2,9 +2,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 // Libraries
-import { useParams } from 'react-router-dom';
-import { useSocket } from '../contexts/socket';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from '../contexts/socket';
 
 type Players = any;
 
@@ -16,7 +15,6 @@ export default function Room({ room }: IRoom) {
     const [players, setPlayers] = useState<Players | null>(null);
     const [loaded, setLoaded] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const params = useParams();
     const socket = useSocket();
     const navigate = useNavigate();
 
@@ -28,12 +26,15 @@ export default function Room({ room }: IRoom) {
         x: event.pageX / window.innerWidth,
         y: event.pageY / window.innerHeight
       }
-  
-      socket?.emit("player_move", pos);
-    }
 
+      socket?.emit("player_move", {
+        position: pos,
+        room_id: room
+      });
+    }
+    
     useEffect(() => {
-      socket?.emit("connect_to", params[room], (response) => {                                                                           
+      socket?.emit("connect_to", room, (response) => {                                                                           
         if (response.status === "fail") {
           navigate("/invalid-room");
         } else {
@@ -58,7 +59,7 @@ export default function Room({ room }: IRoom) {
   
         ctx!.fillStyle = "#DFCCFB";
         ctx!.fillRect(0, 0, canvasW, canvasH);
-  
+        
         if (players) {
           {
             Object.keys(players).forEach((key) => {
@@ -67,8 +68,8 @@ export default function Room({ room }: IRoom) {
                 ctx!.fillRect(
                   window.innerWidth * players[key]?.position.x | 0,
                   window.innerHeight * players[key]?.position.y | 0,
-                  20,
-                  20
+                  15,
+                  15
                 )
               }
             })
@@ -78,9 +79,11 @@ export default function Room({ room }: IRoom) {
     }, [players])
 
     socket?.on("other_move", (...args: any) => {
-      setPlayers(args[2]);
+      const { clients } = args[0].session; 
+
+      setPlayers(clients);
     })
-  
+
     return (
       <>
         {/* Render users' cursors to screen except self (temporary) */}
