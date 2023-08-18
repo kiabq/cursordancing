@@ -10,10 +10,18 @@ type UserInfo = {
     room_id: string
 }
 
+export type AttendanceInfo = {
+    id: string,
+    attendance: number
+}
+
 export interface ServerToClientEvents {
+    //! Change These Types
     other_move: (clients: any) => void;
     room_error: (message: string) => void;
     room_new: (room_created: IRoom) => void;
+    user_disconnected: (socket_id: string) => void;
+    [key: `attendance_change_${string}`]: (attendance: number) => void;
     clients: any;
 }
 
@@ -35,8 +43,8 @@ export interface SocketData { }
 
 export interface IRoom {
     id: string,
-    createdBy: string,
     session: Clients,
+    createdBy: string
 }
 
 export interface IRoomList {
