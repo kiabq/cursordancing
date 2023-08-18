@@ -2,24 +2,21 @@
 import * as React from "react";
 
 //? Libraries
-import { io } from "socket.io-client";
-
-//? Contexts
-import { SocketProvider } from "./contexts/socket";
+import { useParams } from "react-router-dom";
 
 //? Components
-import Room from "./components/Room";
+import Room from "./pages/Room";
 
 //? Styling
 import './App.css';
 
 function App() {
+  const params = useParams();
+
   return (
-    <SocketProvider>
-      <div style={{ "height": "100vh", "width": "100vw", "overflow": "hidden" }}>
-        <Room room="" />
-      </div>
-    </SocketProvider>
+    <div className="app-wrapper">
+      <Room room={params.room || ""} />
+    </div>
   );
 }
 

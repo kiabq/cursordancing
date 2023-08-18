@@ -8,9 +8,11 @@ import {
 
 //? Components
 import App from './App';
-import Home from './pages/Home';
-import CreateRoom from './pages/CreateRoom';
+import Lobby from './pages/Lobby';
 import InvalidRoom from './pages/InvalidRoom';
+
+//? Context
+import { SocketProvider } from './contexts/socket';
 
 //? Styling
 import './index.css';
@@ -24,15 +26,11 @@ const root = ReactDOM.createRoot(
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />
+    element: <Lobby />
   },
   {
     path: "/room/:room",
     element: <App />
-  },
-  {
-    path: '/create-room',
-    element: <CreateRoom />
   },
   {
     path: '/invalid-room',
@@ -42,7 +40,9 @@ const router = createBrowserRouter([
 
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router}/>
+    <SocketProvider>
+      <RouterProvider router={router}/>
+    </SocketProvider>
   </React.StrictMode>
 );
 
