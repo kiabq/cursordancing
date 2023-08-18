@@ -5,13 +5,16 @@ import { useNavigate } from "react-router-dom";
 //? Contexts
 import { useSocket } from "../contexts/socket";
 
+//? Components
+import RoomCard from "../components/RoomCard";
+
 async function getRooms() {
     return await fetch('http://localhost:3001/rooms')
         .then((res) => res.json())
         .catch((err) => err);
 }
 
-export default function Home() {
+export default function Lobby() {
     const [rooms, setRooms] = useState<object>({});
     const socket = useSocket();
     const navigate = useNavigate();
@@ -21,6 +24,12 @@ export default function Home() {
             .then((res) => {
                 setRooms(res);
             });
+
+        socket?.connect();
+
+        return () => {
+            socket?.disconnect();
+        }
     }, [])
 
     async function onSubmit() {
@@ -42,16 +51,16 @@ export default function Home() {
     });
 
     return (
-        <div>
-            <p>Home</p>
-            <button onClick={onSubmit}>Create New Room</button>
-            {Object.keys(rooms).map((key) => {
-                return (
-                    <a href={`/room/${key}`} style={{ 'display': 'block' }}>
-                        {key}
-                    </a>
-                );
-            })}
+        <div id="lobby" className="flex flex-col">
+            <div className="container">
+                <h1 className="room-header">Cursor Stuff</h1>
+                <div className="flex flex-col">
+                    {Object.keys(rooms).map((key) => {
+                        return <RoomCard link={key} />
+                    })}
+                    <button onClick={onSubmit}>Create New Room</button>
+                </div>
+            </div>
         </div>
     )
 }
