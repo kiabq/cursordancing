@@ -1,8 +1,82 @@
+/* Reset */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+#root, #__next {
+  isolation: isolate;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  line-height: 1.5;
+  height: 100dvh;
+  width: 100dvw;
 }
 
+/* Utility Classes */
+
+.container {
+  width: 1024;
+}
+
+.h-inherit {
+  height: inherit;
+}
+
+.h-full {
+  height: 100dvh;
+}
+
+.w-inherit {
+  width: inherit;
+}
+
+.w-full {
+  width: 100dvw;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.space-between {
+  justify-content: space-between;
+}
+
+.content-end {
+  justify-content: flex-end;
+}

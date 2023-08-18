@@ -1,13 +1,62 @@
-* {
-  padding: 0;
-  margin: 0;
+@import url('https://fonts.googleapis.com/css2?family=Geologica:wght@100;200;300;400;500;600;700&family=Just+Me+Again+Down+Here&display=swap');
+
+/* Lobby */
+
+#lobby {
+  justify-content: center;
+  align-items: center;
 }
 
-html {
-  overflow: hidden;
+.room-header {
+  font-family: 'Just Me Again Down Here';
+  font-size: 6rem;
+  margin: 1rem 0
 }
 
-.App {
-  height: 100vh;
-  width: 100vw;
+.room-card {
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 15px;
+  color: black;
+  font-family: "Just Me Again Down Here";
+  height: 100px;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.room-card:hover {
+  filter: drop-shadow(0 0 0.5rem black);
+}
+
+.room-card span {
+  margin-top: auto !important;
+  height: 20px;
+  bottom: 0 !important; 
+}
+
+.room-card svg {
+  filter: grayscale(1);
+  animation: 1s infinite disco;
+
+}
+
+@keyframes disco {
+  from {
+    filter: hue-rotate(0deg);
+    margin-bottom: 0px;
+    transform: scaleX(1);
+  }
+
+  25% {
+    transform: scaleX(-1);
+    margin-bottom: 10px;
+  }
+
+  to {
+    filter: hue-rotate(360deg);
+    margin-bottom: 0px;
+    transform: scaleX(1);
+  }
 }
