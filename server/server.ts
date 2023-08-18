@@ -11,9 +11,6 @@ import { createRoom, getRooms } from './src/routes/http';
 //? Services
 import { Rooms } from './src/services/rooms';
 
-//? Utils
-import roomhash from './utils/roomhash';
-
 //? Types
 import {
   ClientToServerEvents,
@@ -22,9 +19,6 @@ import {
   SocketData,
 
 } from "./utils/types";
-
-// TODO: Make folders for models/entities
-// TODO: Make folders for routes (WS and HTTP should be separate)
 
 const app = new Koa();
 app.use(Cors());
@@ -46,25 +40,28 @@ export const io = new Server<
 
 export const RoomHandler = new Rooms();
 
-// TODO: Add ability to create named rooms
-// TODO: Allow users to create / update their username
-// - This means associating a username with a particular socket,
-// so add this sometime after the handshake and remove it when the socket is disconnected
-// TODO: Allow users to select room
-// TODO: Allow users to chat
-
 //! REFACTOR!!!
 //! REFACTOR!!!
 //! REFACTOR!!!
 //! REFACTOR!!!
 io.on("connection", (socket) => {
-  socket.on("connect_to", (args, callback) => {
-    const room = args;
+  socket.join("lobby");
+  
+  console.log(RoomHandler.rooms);
 
-    if (room && RoomHandler.rooms[room]) {
-      socket.join(room);
-      //! Change this
-      RoomHandler.rooms[room].session.saveClients(socket.id, null, room);
+  socket.on("connect_to", (args, callback) => {
+    const room_id = args;
+
+    if (room_id && RoomHandler.rooms[room_id]) {
+      socket.join(room_id);
+
+      const { session } = RoomHandler.rooms[room_id];
+      session.saveClients(socket.id, null, room_id);
+
+      io
+        .to("lobby")
+        .emit(`attendance_change_${room_id}`, 0);
+
       callback({ status: "ok" });
     } else {
       callback({ status: "fail" });
@@ -95,16 +92,25 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const rooms = Object.entries(RoomHandler.rooms);
 
-    rooms.forEach((room) => {
-      const [ _, info ] = room;
+    rooms.forEach((entry) => {
+      const [ _, room ] = entry;
 
-      if (info.session.clients[socket.id]) {
-        info.session.removeClients(socket.id);
+      if (room.session.clients[socket.id]) {
+        room.session.removeClients(socket.id);
+
+        io
+          .to("lobby")
+          .emit(`attendance_change_${room.id}`, 0);
+
+        io
+          .to(room.id)
+          .emit('user_disconnected', socket.id);
       }
     })
   })
 });
 
+// router.get('/attendance', getAttendance);
 router.get('/rooms', getRooms);
 router.post('/create-room', createRoom);
 
