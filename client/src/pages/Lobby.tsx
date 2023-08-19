@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 //? Contexts
-import { useSocket } from "../contexts/socket";
+import { useManager } from "../contexts/socket";
 
 //? Components
 import RoomCard from "../components/RoomCard";
@@ -14,22 +14,34 @@ async function getRooms() {
         .catch((err) => err);
 }
 
+async function getAttendance() {
+    return await fetch('http://localhost:3001/attendance')
+        .then((res) => res.json())
+        .catch((err) => err);
+}
+
 export default function Lobby() {
     const [rooms, setRooms] = useState<object>({});
-    const socket = useSocket();
+    const manager = useManager();
     const navigate = useNavigate();
-
+    const socket = manager?.socket('/lobby');
+    
     useEffect(() => {
         getRooms()
             .then((res) => {
                 setRooms(res);
             });
+        
+        getAttendance()
+            .then((res) => {
+                console.log(res);
+            })
 
         socket?.connect();
 
-        return () => {
-            socket?.disconnect();
-        }
+        return (() => {
+            socket?.disconnect();   
+        })
     }, [])
 
     async function onSubmit() {
@@ -55,8 +67,8 @@ export default function Lobby() {
             <div className="container">
                 <h1 className="room-header">Cursor Stuff</h1>
                 <div className="flex flex-col">
-                    {Object.keys(rooms).map((key) => {
-                        return <RoomCard link={key} />
+                    {Object.values(rooms).map(({ id, attendance }) => {
+                        return <RoomCard link={id} attendance={attendance.amount} />
                     })}
                     <button onClick={onSubmit}>Create New Room</button>
                 </div>

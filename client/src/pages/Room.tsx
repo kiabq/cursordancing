@@ -1,7 +1,7 @@
 //? Libraries
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSocket } from '../contexts/socket';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useManager } from '../contexts/socket';
 
 //? Components
 import Canvas from '../components/Canvas';
@@ -13,58 +13,48 @@ import Toast from '../components/Toast';
 
 type Players = any;
 
-interface IRoom {
-    room: string
-}
+export default function Room() {
+  //! Bug: Players is not being loaded in build mode sometimes
+  const [players, setPlayers] = useState<Players | undefined>();
+  const [loaded, setLoaded] = useState(false);
+  const { toast, showToast } = useToast();
+  const navigate = useNavigate();
+  const params = useParams();
+  const manager = useManager();
+  const socket = manager?.socket(`/${params.room}`);
 
-export default function Room({ room }: IRoom) {
-    const [players, setPlayers] = useState<Players | null>(null);
-    const [loaded, setLoaded] = useState(false);
-    const { toast, showToast } = useToast();
-    const socket = useSocket();
-    const navigate = useNavigate();
+  //! Reroute if room is invalid
+  useEffect(() => {
+    socket?.connect();
+    setLoaded(true);
 
-    // TODO: Add unmounting functions for sockets
-    // TODO: Separate this into components & lib functions
-    
-    useEffect(() => {
-      socket?.emit("connect_to", room, (response) => {                                                                           
-        if (response.status === "fail") {
-          navigate("/invalid-room");
-        } else {
-          setLoaded(true);
-        }
-      });
+    return (() => {
+      socket?.disconnect()
+    })
+  }, [socket])
 
-      socket?.connect();
+  socket?.on("other_move", (...args: any) => {
+    const { clients } = args[0].session;
 
-      return () => { 
-        socket?.disconnect();
+    setPlayers(clients);
+  })
+
+  socket?.on("user_disconnected", (user) => {
+    showToast(`${user} Disconnected`, 'fail');
+  })
+
+  return (
+    <>
+      {toast && <Toast message={toast?.message} status='fail' />}
+
+      <Cursor />
+
+      {loaded && params.room &&
+        <Canvas
+          room={params.room}
+          players={players}
+        />
       }
-    }, [socket])
-  
-    socket?.on("other_move", (...args: any) => {
-      const { clients } = args[0].session; 
-
-      setPlayers(clients);
-    })
-
-    socket?.on("user_disconnected", (user) => {
-      showToast(`${user} Disconnected`, 'fail');
-    })
-
-    return (
-      <>
-        {toast && <Toast message={toast?.message} status='fail' /> }
-
-        <Cursor />
-
-        {loaded && 
-          <Canvas 
-            room={room}
-            players={players} 
-          />
-        }
-      </>
-    )
-  }
+    </>
+  )
+}

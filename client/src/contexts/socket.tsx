@@ -1,16 +1,16 @@
 //? Libraries
 import React, { createContext, useContext } from 'react';
-import { io } from 'socket.io-client';
+import { io, Manager } from 'socket.io-client';
+
 
 //? Types
-import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from "@backend/types";
 import type { ISocketContext } from '../utils/types';
 
-const SocketContext = createContext<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
+const SocketContext = createContext<Manager<ServerToClientEvents, ClientToServerEvents> | null>(null);
 
 export function SocketProvider({ children }: ISocketContext) {
-    const ws = io("ws://localhost:5173");
+    const ws = new Manager(`ws://localhost:5173`);
 
     return (
         <SocketContext.Provider value={ws}>
@@ -19,6 +19,6 @@ export function SocketProvider({ children }: ISocketContext) {
     )
 }
 
-export function useSocket() {
+export function useManager() {
     return useContext(SocketContext);
 } 
