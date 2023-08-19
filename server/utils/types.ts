@@ -1,5 +1,6 @@
 //? Types
 import type { Clients } from "../src/services/clients";
+import type { Attendance } from "../src/services/attendance";
 
 //? Socket Types
 type UserInfo = {
@@ -8,11 +9,6 @@ type UserInfo = {
         y: number,
     }
     room_id: string
-}
-
-export type AttendanceInfo = {
-    id: string,
-    attendance: number
 }
 
 export interface ServerToClientEvents {
@@ -44,7 +40,8 @@ export interface SocketData { }
 export interface IRoom {
     id: string,
     session: Clients,
-    createdBy: string
+    createdBy: string,
+    attendance: Attendance
 }
 
 export interface IRoomList {
@@ -64,6 +61,6 @@ export interface IClient {
     [key: string]: {
         socket: ClientSocket,
         position: ClientPosition
-        connected_id: string | null
+        connected_id: string | null,
     },
 };

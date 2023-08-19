@@ -1,5 +1,5 @@
 //? Global
-import { RoomHandler, io } from '../../server';
+import { RoomHandler, lobbyNamespace } from '../../server';
 
 //? Utils
 import roomhash from '../../utils/roomhash';
@@ -10,7 +10,16 @@ import type Router = require('koa-router');
 
 type KoaRoute = Koa.ParameterizedContext<any, Router.IRouterParamContext<any, {}>, any>
 
+export async function getAttendance(ctx: KoaRoute) {
+    const rooms = Object.entries(RoomHandler.rooms);
+
+    //! Add Error Handling
+    ctx.status = 200;
+    ctx.body = {};
+}
+
 export async function getRooms(ctx: KoaRoute) {
+    //! Add Error Handling
     ctx.status = 200;
     ctx.body = RoomHandler.rooms;
 }
@@ -25,7 +34,7 @@ export async function createRoom(ctx: KoaRoute) {
         }
 
         const newRoom = RoomHandler.createRoom(createdRoom, socket);
-        io.emit("room_new", newRoom);
+        lobbyNamespace.emit("room_new", newRoom);
 
         ctx.status = 200;
         ctx.body = { createdRoom };

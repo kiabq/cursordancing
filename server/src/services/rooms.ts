@@ -1,16 +1,16 @@
 //? Utils
 import { Clients } from "./clients";
+import { Attendance } from "./attendance";
 
 //? Types
 import { IRoomList } from "../../utils/types";
+
 
 export class Rooms {
     rooms: IRoomList;
 
     constructor() {
         this.rooms = {};
-        this.connectRoom = this.connectRoom.bind(this);
-        this.disconnectRoom = this.disconnectRoom.bind(this);
     }
 
     public createRoom(room: string, creator: string) {
@@ -20,12 +20,9 @@ export class Rooms {
             return this.rooms[room] = {
                 id: room,
                 session: new Clients(),
-                createdBy: creator
+                createdBy: creator,
+                attendance: new Attendance()
             };
         }
     }
-
-    public connectRoom() { }
-
-    public disconnectRoom() { }
 };
