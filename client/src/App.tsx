@@ -15,7 +15,6 @@ function App() {
 
   return (
     <div className="app-wrapper">
-      <Room room={params.room || ""} />
     </div>
   );
 }

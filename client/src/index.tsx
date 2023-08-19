@@ -8,6 +8,7 @@ import {
 
 //? Components
 import App from './App';
+import Room from './pages/Room';
 import Lobby from './pages/Lobby';
 import InvalidRoom from './pages/InvalidRoom';
 
@@ -16,6 +17,7 @@ import { SocketProvider } from './contexts/socket';
 
 //? Styling
 import './index.css';
+import './App.css';
 
 import reportWebVitals from './reportWebVitals';
 
@@ -30,7 +32,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/room/:room",
-    element: <App />
+    element: <Room />
   },
   {
     path: '/invalid-room',
