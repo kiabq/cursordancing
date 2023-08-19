@@ -2,20 +2,18 @@
 import { useState } from "react"
 
 //? Contexts
-import { useSocket } from "../contexts/socket";
+import { useManager } from "../contexts/socket";
 
 //? Components
 import CursorRight from "../assets/images/CursorRight";
 
-//? Types
-import type { AttendanceInfo } from "@backend/types";
+export default function RoomCard({ link, attendance }: { link: string, attendance: number }) {
+    const [roomAttendance, setAttendance] = useState<number>(attendance);
+    const manager = useManager();
+    const socket = manager?.socket('/lobby');
 
-export default function RoomCard({ link }: { link: string }) {
-    const [roomAttendance, setAttendance] = useState<number>();
-    const socket = useSocket();
-
-    socket?.on(`attendance_change_${link}`, (attendance) => {
-        setAttendance(attendance)
+    socket?.on(`attendance_change_${link}`, (value) => {
+        setAttendance(value)
     })
 
     return (
@@ -29,7 +27,6 @@ export default function RoomCard({ link }: { link: string }) {
                     {/* User Count */}
                     <span>{roomAttendance} / 8</span>
                 </div>
-
             </div>
         </a>
     )
