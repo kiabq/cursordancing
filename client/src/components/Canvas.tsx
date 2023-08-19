@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 //? Contexts
-import { useSocket } from "../contexts/socket";
+import { useManager } from "../contexts/socket";
 
 interface ICanvasProps {
     room: string,
@@ -10,65 +10,67 @@ interface ICanvasProps {
 }
 
 export default function Canvas({ room, players }: ICanvasProps) {
-    const socket = useSocket();
+    const manager = useManager();
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [call, setCall] = useState(true);
+    const [svg, setSVG] = useState<HTMLImageElement | undefined>();
 
+    const socket = manager?.socket(`/${room}`);
+
+    let call = true;
     function EmitCursor(event: React.MouseEvent) {
         if (!call) return;
 
-        setCall(false);
+        call = false;
 
-        const pos = {   
+        const pos = {
             x: event.pageX / window.innerWidth,
             y: event.pageY / window.innerHeight
         }
-
+        
         socket?.emit("player_move", {
             position: pos,
             room_id: room
         });
 
-        setTimeout(() => { setCall(true) }, 25);
+        setTimeout(() => { call = true }, 25);
     }
 
-    const cursor = document.getElementById('cursor-1') as HTMLImageElement;
-    const xml = new XMLSerializer().serializeToString(cursor);
-    const blob = new Blob([xml], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.src = url;
+    useEffect(() => {
+        const cursor = document.getElementById('cursor-1') as HTMLImageElement;
+        const xml = new XMLSerializer().serializeToString(cursor);
+        const blob = new Blob([xml], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.src = url;
+
+        console.log(img);
+        setSVG(img);
+    }, [])
 
     function draw() {
         const canvas = canvasRef.current;
 
-        img.onload = () => {
-            if (canvas instanceof HTMLCanvasElement && cursor) {
-                const ctx = (canvas as HTMLCanvasElement).getContext('2d');
-                const canvasW = canvas.width;
-                const canvasH = canvas.height;
+        if (canvas instanceof HTMLCanvasElement && svg) {
+            const ctx = (canvas as HTMLCanvasElement).getContext('2d');
+            const canvasW = canvas.width;
+            const canvasH = canvas.height;
 
-                ctx!.fillStyle = "#DFCCFB";
-                ctx!.fillRect(0, 0, canvasW, canvasH);
-                ctx!.font = "20px serif";
+            ctx!.fillStyle = "#DFCCFB";
+            ctx!.fillRect(0, 0, canvasW, canvasH);
+            ctx!.font = "20px serif";
 
-                if (players) {
-                    {
-                        Object.keys(players).forEach((key) => {
-                            console.log("redrawing");
+            if (players) {
+                {
+                    Object.keys(players).forEach((key) => {
+                        if (socket?.id !== key && players[key].position) {
+                            const x = Math.floor(window.innerWidth * players[key]?.position.x) | 0;
+                            const y = Math.floor(window.innerHeight * players[key]?.position.y) | 0;
 
-                            if (socket?.id !== key && players[key].position) {
-                                const x = Math.floor(window.innerWidth * players[key]?.position.x) | 0;
-                                const y = Math.floor(window.innerHeight * players[key]?.position.y) | 0;
-
-                                ctx!.fillStyle = 'black';
-                                ctx!.drawImage(img, x, y);
-                                ctx!.fillText(key, x, y + 40);
-
-                                URL.revokeObjectURL(img.src);
-                            }
-                        })
-                    }
+                            ctx!.fillStyle = 'black';
+                            ctx!.drawImage(svg, x, y);
+                            ctx!.fillText(key, x, y + 40);
+                        }
+                    })
                 }
             }
         }
@@ -83,14 +85,16 @@ export default function Canvas({ room, players }: ICanvasProps) {
     }, [players])
 
     return (
-        <canvas
-            className="App"
-            style={{ "backgroundColor": "#DFCCFB", "zIndex": 9998, "position": "relative" }}
-            height={window.innerHeight}
-            width={window.innerWidth}
-            onMouseMove={(e) => { EmitCursor(e) }}
-            ref={canvasRef}
-        >
-        </canvas>
+        <>
+            <canvas
+                className="App"
+                style={{ "backgroundColor": "#DFCCFB", "zIndex": 9998, "position": "relative" }}
+                height={window.innerHeight}
+                width={window.innerWidth}
+                onMouseMove={(e) => { EmitCursor(e) }}
+                ref={canvasRef}
+            >
+            </canvas>
+        </>
     )
 }
