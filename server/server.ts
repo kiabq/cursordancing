@@ -6,7 +6,7 @@ import BodyParser = require('koa-bodyparser');
 import { Server } from 'socket.io';
 
 //? Routes
-import { createRoom, getRooms } from './src/routes/http';
+import { createRoom, getRooms, getAttendance } from './src/routes/http';
 
 //? Services
 import { Rooms } from './src/services/rooms';
@@ -40,39 +40,31 @@ export const io = new Server<
 
 export const RoomHandler = new Rooms();
 
-//! REFACTOR!!!
-//! REFACTOR!!!
-//! REFACTOR!!!
-//! REFACTOR!!!
-io.on("connection", (socket) => {
+export const lobbyNamespace = io.of('/lobby');
+export const roomNamespace = io.of(/^\/[a-zA-Z0-9]{6}/);
+
+lobbyNamespace.on("connection", (socket) => {
   socket.join("lobby");
-  
-  console.log(RoomHandler.rooms);
+})
 
-  socket.on("connect_to", (args, callback) => {
-    const room_id = args;
+roomNamespace.on('connection', (socket) => {
+  const room_name = (socket.nsp.name).split('/')[1];
+  const room = RoomHandler.rooms[room_name];
 
-    if (room_id && RoomHandler.rooms[room_id]) {
-      socket.join(room_id);
+  if (RoomHandler.rooms && room) {
+    const { session, attendance } = room;
 
-      const { session } = RoomHandler.rooms[room_id];
-      session.saveClients(socket.id, null, room_id);
+    socket.join(room_name);
+    session.saveClients(socket.id, null, room_name);
+    attendance.incrementAttendance();
 
-      io
-        .to("lobby")
-        .emit(`attendance_change_${room_id}`, 0);
-
-      callback({ status: "ok" });
-    } else {
-      callback({ status: "fail" });
-    }
-  })
+    lobbyNamespace.emit(`attendance_change_${room_name}`, attendance.amount);
+  }
 
   socket.on("player_move", (...args) => {
     try {
       if (args) {
-        const { position, room_id } = args[0];
-        const room = RoomHandler.rooms[room_id];
+        const { position } = args[0];
         const { clients } = room.session;
 
         clients[socket.id]!.position = {
@@ -80,8 +72,8 @@ io.on("connection", (socket) => {
           y: position.y
         }
 
-        io
-          .to(room_id)
+        roomNamespace
+          .to(room_name)
           .emit("other_move", room);
       }
     } catch (error) {
@@ -90,27 +82,20 @@ io.on("connection", (socket) => {
   })
 
   socket.on("disconnect", () => {
-    const rooms = Object.entries(RoomHandler.rooms);
+    if (room && room.session.clients[socket.id]) {
+      const { session, attendance } = room;
 
-    rooms.forEach((entry) => {
-      const [ _, room ] = entry;
-
-      if (room.session.clients[socket.id]) {
-        room.session.removeClients(socket.id);
-
-        io
-          .to("lobby")
-          .emit(`attendance_change_${room.id}`, 0);
-
-        io
-          .to(room.id)
-          .emit('user_disconnected', socket.id);
-      }
-    })
+      session.removeClients(socket.id);
+      attendance.decrementAttendance();
+      lobbyNamespace.emit(`attendance_change_${room_name}`, attendance.amount);
+      roomNamespace
+        .to(room_name)
+        .emit('user_disconnected', socket.id);
+    }
   })
-});
+})
 
-// router.get('/attendance', getAttendance);
+router.get('/attendance', getAttendance);
 router.get('/rooms', getRooms);
 router.post('/create-room', createRoom);
 
