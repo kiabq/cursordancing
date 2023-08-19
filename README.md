@@ -8,6 +8,7 @@
   - [ ] Add controls for cursor customization and cursor movement (custom cursor, rotation, cursor size).
   - [ ] Add toast feature for connections and disconnections
 - Server
+  - [x] Create a namespace for each room  
   - [ ] Persist user information during sessions, including points, name, and room
   - [ ] Create a username for each socket
     - [ ] Optional: Allow users to create custom usernames 
