@@ -59,6 +59,10 @@ roomNamespace.on('connection', (socket) => {
     attendance.incrementAttendance();
 
     lobbyNamespace.emit(`attendance_change_${room_name}`, attendance.amount);
+
+    roomNamespace
+      .to(room_name)
+      .emit('user_connected', socket.id);
   }
 
   socket.on("player_move", (...args) => {
@@ -88,6 +92,7 @@ roomNamespace.on('connection', (socket) => {
       session.removeClients(socket.id);
       attendance.decrementAttendance();
       lobbyNamespace.emit(`attendance_change_${room_name}`, attendance.amount);
+
       roomNamespace
         .to(room_name)
         .emit('user_disconnected', socket.id);
