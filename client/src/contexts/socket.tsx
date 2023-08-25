@@ -1,6 +1,6 @@
 //? Libraries
 import React, { createContext, useContext } from 'react';
-import { io, Manager } from 'socket.io-client';
+import { Manager } from 'socket.io-client';
 
 
 //? Types

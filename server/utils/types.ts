@@ -17,6 +17,7 @@ export interface ServerToClientEvents {
     room_error: (message: string) => void;
     room_new: (room_created: IRoom) => void;
     user_disconnected: (socket_id: string) => void;
+    user_connected: (socket_id: string) => void;
     [key: `attendance_change_${string}`]: (attendance: number) => void;
     clients: any;
 }

@@ -22,7 +22,7 @@ export default function RoomCard({ link, attendance }: { link: string, attendanc
             <div className="flex content-end">
                 {/* User Image Here */}
                 <div className="flex">
-                    <CursorRight />
+                    {/* <CursorRight /> */}
 
                     {/* User Count */}
                     <span>{roomAttendance} / 8</span>

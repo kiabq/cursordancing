@@ -15,7 +15,6 @@ type Toast = {
 
 type ToastReducer = Toast & { type: 'added' | 'removed' }
 
-
 export default function useToast() {
     let id = 0;
 

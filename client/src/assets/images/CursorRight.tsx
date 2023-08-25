@@ -1,7 +1,8 @@
-import React from "react";
+import { useRef } from "react";
 
 //! Move all cursors to a HOC that will take props to change CSS and settings
-function CursorRight() {
+function CursorRight({ point }: { point: { x: number, y: number } }) {
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -10,7 +11,8 @@ function CursorRight() {
       fill="none"
       viewBox="0 0 200 200"
       //! for all that is holy, please change this, ^ see above
-      style={{ 'height': '1rem', 'marginTop': '6px' }}
+      style={{ "position": "absolute", "zIndex": 2, "cursor": "none" }}
+      transform={`translate(${point.x}, ${point.y})`}
     >
       <g filter="url(#filter0_d_7_19)">
         <path

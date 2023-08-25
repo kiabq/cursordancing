@@ -9,30 +9,33 @@ interface ICanvasProps {
     players: any
 }
 
+// TODO: Set user cursor to custom one
+// TODO: Add interpolation on canvas
+
 export default function Canvas({ room, players }: ICanvasProps) {
     const manager = useManager();
+    const socket = manager?.socket(`/${room}`);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [svg, setSVG] = useState<HTMLImageElement | undefined>();
+    const [call, setCall] = useState(true);
 
-    const socket = manager?.socket(`/${room}`);
-
-    let call = true;
     function EmitCursor(event: React.MouseEvent) {
         if (!call) return;
-
-        call = false;
+        setCall(false);
 
         const pos = {
             x: event.pageX / window.innerWidth,
             y: event.pageY / window.innerHeight
         }
-        
-        socket?.emit("player_move", {
-            position: pos,
-            room_id: room
-        });
 
-        setTimeout(() => { call = true }, 25);
+        if (call === true) {
+            socket?.emit("player_move", {
+                position: pos,
+                room_id: room
+            });
+        }
+
+        setTimeout(() => { setCall(true) }, 25);
     }
 
     useEffect(() => {
@@ -43,7 +46,6 @@ export default function Canvas({ room, players }: ICanvasProps) {
         const img = new Image();
         img.src = url;
 
-        console.log(img);
         setSVG(img);
     }, [])
 
@@ -75,7 +77,7 @@ export default function Canvas({ room, players }: ICanvasProps) {
             }
         }
     }
-
+    
     useEffect(() => {
         const reqAnimate = requestAnimationFrame(draw);
 
@@ -83,12 +85,12 @@ export default function Canvas({ room, players }: ICanvasProps) {
             cancelAnimationFrame(reqAnimate);
         }
     }, [players])
-
+    
     return (
         <>
             <canvas
                 className="App"
-                style={{ "backgroundColor": "#DFCCFB", "zIndex": 9998, "position": "relative" }}
+                style={{ "backgroundColor": "#DFCCFB", "zIndex": 1, "position": "relative", "cursor": "none" }}
                 height={window.innerHeight}
                 width={window.innerWidth}
                 onMouseMove={(e) => { EmitCursor(e) }}
