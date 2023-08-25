@@ -1,9 +1,9 @@
 //? Libraries
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { 
-  createBrowserRouter, 
-  RouterProvider 
+import {
+  createBrowserRouter,
+  RouterProvider
 } from "react-router-dom";
 
 //? Components
@@ -20,6 +20,7 @@ import './index.css';
 import './App.css';
 
 import reportWebVitals from './reportWebVitals';
+import RoomWrapper from './components/RoomWrapper';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -32,7 +33,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/room/:room",
-    element: <Room />
+    element: (
+      <RoomWrapper>
+        <Room />
+      </RoomWrapper>
+    )
   },
   {
     path: '/invalid-room',
@@ -43,7 +48,7 @@ const router = createBrowserRouter([
 root.render(
   <React.StrictMode>
     <SocketProvider>
-      <RouterProvider router={router}/>
+      <RouterProvider router={router} />
     </SocketProvider>
   </React.StrictMode>
 );
