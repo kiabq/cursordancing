@@ -1,2 +1,2 @@
 //? Global
-import { RoomHandler, io } from "../../server";
+import { io } from "../../server";
