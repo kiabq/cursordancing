@@ -1,6 +1,6 @@
 //? Libraries
 import React, { ReactNode, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 
 //? Context
 import { useManager } from "../contexts/socket";
@@ -12,6 +12,17 @@ import CursorRight from "../assets/images/CursorRight";
 //? Hooks
 import useToast from "../hooks/useToast";
 
+enum NavigationEnum { 
+    "navigate",
+    "reload",
+    "back_forward",
+    "prerender"
+}
+
+interface NavigationType extends PerformanceEntry {
+    readonly type?: NavigationEnum
+}
+
 export default function RoomWrapper({ children }: { children: ReactNode }) {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const { toasts, showToast } = useToast();
@@ -20,21 +31,19 @@ export default function RoomWrapper({ children }: { children: ReactNode }) {
     const navigate = useNavigate();
     const manager = useManager();
     const socket = manager?.socket(`/${params.room}`);
+    const navigationType: NavigationType = performance.getEntriesByType("navigation")[0];
 
     useEffect(() => {
         socket?.on("user_connected", (user) => {
-            if (performance.navigation.type != 1) {
-                showToast(`${user} Connected`, 'success');
-            }
+            showToast(`${user} Connected`, 'success');
         });
 
         socket?.on("user_disconnected", (user) => {
-            if (performance.navigation.type != 1) {
-                showToast(`${user} Disconnected`, 'fail');
-            }
+            showToast(`${user} Disconnected`, 'fail');
         });
-
+        
         return () => {
+            socket?.disconnect();
             socket?.off("user_connected");
             socket?.off("user_disconnected");
         }
@@ -53,9 +62,7 @@ export default function RoomWrapper({ children }: { children: ReactNode }) {
                     }
                 })}
             </div>
-
             <CursorRight point={position} />
-
             {children}
         </div>
     )

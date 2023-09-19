@@ -1,6 +1,6 @@
 //? Libraries
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 //? Context
 import { useManager } from '../contexts/socket';
@@ -9,18 +9,12 @@ import { useManager } from '../contexts/socket';
 import Canvas from '../components/Canvas';
 import Cursor from '../assets/images/Cursor';
 
-
-//? Hooks
-import useToast from '../hooks/useToast';
-import RoomWrapper from '../components/RoomWrapper';
-
 type Players = any;
 
 export default function Room() {
   //! Bug: Players is not being loaded in build mode sometimes
-  const [players, setPlayers] = useState<Players | undefined>();
+  const [players, setPlayers] = useState<Players | undefined>({});
   const [loaded, setLoaded] = useState(false);
-  const navigate = useNavigate();
   const params = useParams();
   const manager = useManager();
   const socket = manager?.socket(`/${params.room}`);
@@ -32,9 +26,7 @@ export default function Room() {
 
   useEffect(() => {
     socket?.on("other_move", (...args: any) => {
-      const { clients } = args[0].session;
-  
-      setPlayers(clients);
+      setPlayers(args[0]);
     })
 
     return () => {
@@ -45,7 +37,6 @@ export default function Room() {
   return (
     <>
       <Cursor />
-
       {loaded && params.room &&
         <Canvas
           room={params.room}

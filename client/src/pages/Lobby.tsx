@@ -21,29 +21,11 @@ async function getAttendance() {
 }
 
 export default function Lobby() {
-    const [rooms, setRooms] = useState<object>({});
+    const [rooms, setRooms] = useState<Array<string>>([]);
     const manager = useManager();
     const navigate = useNavigate();
     const socket = manager?.socket('/lobby');
     
-    useEffect(() => {
-        getRooms()
-            .then((res) => {
-                setRooms(res);
-            });
-        
-        getAttendance()
-            .then((res) => {
-                console.log(res);
-            })
-
-        socket?.connect();
-
-        return (() => {
-            socket?.disconnect();   
-        })
-    }, [])
-
     async function onSubmit() {
         const result: { createdRoom: string } = await fetch(`http://localhost:3001/create-room?socket=${socket?.id}`, {
             method: "POST"
@@ -58,8 +40,30 @@ export default function Lobby() {
         }
     }
 
+    useEffect(() => {
+        if (performance.navigation.type === 1) {}
+
+        getRooms()
+            .then((res) => {
+                const rooms = res['rooms']?.reverse();
+
+                setRooms(rooms);
+            });
+        
+        // getAttendance()
+        //     .then((res) => {
+        //         console.log(res);
+        //     })
+
+        socket?.connect();
+
+        return (() => {
+            socket?.disconnect();   
+        })
+    }, [])
+
     socket?.on("room_new", (newRoom) => {
-        setRooms({ ...rooms, [newRoom.id]: newRoom });
+        setRooms([newRoom, ...rooms]);
     });
 
     return (
@@ -67,10 +71,10 @@ export default function Lobby() {
             <div className="container">
                 <h1 className="room-header">Cursor Stuff</h1>
                 <div className="flex flex-col">
-                    {Object.values(rooms).map(({ id, attendance }) => {
-                        return <RoomCard link={id} attendance={attendance.amount} />
+                    <button style={{ "marginBottom": "16px" }} onClick={onSubmit}>Create New Room</button>
+                    {rooms?.map((value) => {
+                        return <RoomCard link={value} attendance={0} />
                     })}
-                    <button onClick={onSubmit}>Create New Room</button>
                 </div>
             </div>
         </div>

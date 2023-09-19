@@ -35,7 +35,7 @@ export default function Canvas({ room, players }: ICanvasProps) {
             });
         }
 
-        setTimeout(() => { setCall(true) }, 25);
+        setTimeout(() => { setCall(true) }, 12);
     }
 
     useEffect(() => {
@@ -61,23 +61,24 @@ export default function Canvas({ room, players }: ICanvasProps) {
             ctx!.fillRect(0, 0, canvasW, canvasH);
             ctx!.font = "20px serif";
 
+            console.log(players);
+
             if (players) {
                 {
-                    Object.keys(players).forEach((key) => {
-                        if (socket?.id !== key && players[key].position) {
-                            const x = Math.floor(window.innerWidth * players[key]?.position.x) | 0;
-                            const y = Math.floor(window.innerHeight * players[key]?.position.y) | 0;
-
+                    for (const player in players) {
+                        if (socket?.id !== player && players[player]) {
+                            const x = Math.floor(window.innerWidth * players[player][0]) | 0;
+                            const y = Math.floor(window.innerHeight * players[player][1]) | 0;
                             ctx!.fillStyle = 'black';
                             ctx!.drawImage(svg, x, y);
-                            ctx!.fillText(key, x, y + 40);
+                            ctx!.fillText(player, x, y + 40);
                         }
-                    })
+                    }
                 }
             }
         }
     }
-    
+
     useEffect(() => {
         const reqAnimate = requestAnimationFrame(draw);
 
@@ -85,7 +86,7 @@ export default function Canvas({ room, players }: ICanvasProps) {
             cancelAnimationFrame(reqAnimate);
         }
     }, [players])
-    
+
     return (
         <>
             <canvas

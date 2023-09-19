@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useManager } from "../contexts/socket";
 
 //? Components
-import CursorRight from "../assets/images/CursorRight";
+// import CursorRight from "../assets/images/CursorRight";
 
 export default function RoomCard({ link, attendance }: { link: string, attendance: number }) {
     const [roomAttendance, setAttendance] = useState<number>(attendance);
