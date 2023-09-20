@@ -1,4 +1,7 @@
-# cursordancing
+# cursordancing (WIP)
+
+![Peek 2023-09-19 20-02](https://github.com/kiabq/cursordancing/assets/44178907/ae952a27-95e7-4558-84e9-012ce69bbedf)
+
 
 ## TODO:
 - Client
